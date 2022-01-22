@@ -10,3 +10,4 @@ def convert_decimal_latitude_longitude(df):
         df[direction] = dms['d'] + dms['m'].div(60) + dms['s'].div(3600)
         if direction == 'longitude':
             df[direction] *= -1
+
