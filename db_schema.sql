@@ -120,7 +120,7 @@ GROUP BY fire_year, district, unit, fire_number, fire_name, legal, latitude, lon
 ORDER BY report_date, county
 
 
-CREATE FUNCTION average_from_lastyear(START_DATE timestamp) 
+CREATE FUNCTION average_from_lastyear(START_DATE timestamp, input_county text) 
 	RETURNS FLOAT 
 	LANGUAGE plpgsql
 AS '
@@ -130,7 +130,8 @@ BEGIN
 		SELECT avg(n.prcp_avg_day) 
 		INTO average_value
 		FROM noaa_daily n
-		WHERE n.date BETWEEN START_DATE - INTERVAL ''1 YEAR''AND START_DATE;
+		WHERE (n.date BETWEEN START_DATE - INTERVAL ''1 YEAR''AND START_DATE)
+		AND n.COUNTY = input_county;
 		RETURN average_value;
 END;
 ';
@@ -140,12 +141,12 @@ END;
  WITH month_avg AS (
          SELECT max(noaa_daily.county::text) AS county,
             max(date_trunc('month'::text, noaa_daily.date::timestamp with time zone)) AS year_month,
-            avg(noaa_daily.prcp_avg_day) AS avg_prcp
+            avg(noaa_daily.prcp_avg_day) AS prcp_avg_month
            FROM noaa_daily
           GROUP BY noaa_daily.county, (date_trunc('month'::text, noaa_daily.date::timestamp with time zone))
         )
  SELECT 
     fw_comb.*,
-    month_avg.avg_prcp, (SELECT "average_from_lastyear"(fw_comb.report_date) ) as prcp_avg_year
+    month_avg.prcp_avg_month, (SELECT "average_from_lastyear"(fw_comb.report_date,fw_comb.county) ) as prcp_avg_year
    FROM fw_combined_avgs fw_comb
      LEFT JOIN month_avg ON fw_comb.county::text = month_avg.county AND date_trunc('month'::text, fw_comb.report_date::timestamp with time zone) = month_avg.year_month;
