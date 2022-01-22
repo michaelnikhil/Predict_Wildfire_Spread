@@ -136,5 +136,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/settings.json
+<<<<<<< HEAD
 temp.py
 temp.py
+=======
+>>>>>>> origin/Add-yearly-average-of-rainfall
